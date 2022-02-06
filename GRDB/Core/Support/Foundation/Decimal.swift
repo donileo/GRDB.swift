@@ -26,8 +26,19 @@ extension Decimal: DatabaseValueConvertible {
         case .double(let double):
             return self.init(double)
         case let .string(string):
-            // Must match NSNumber.fromDatabaseValue(_:)
-            return self.init(string: string, locale: _posixLocale)
+            // Check if val has a '/' delimiter
+            if string.contains("/") {
+                let elems = string.split(separator: "/", maxSplits: 1)
+
+                guard elems.count == 2, let numerator = Int64(elems[0]), let denominator = Int64(elems[1]) else {
+                    return nil
+                }
+
+                return Decimal(numerator)/Decimal(denominator)
+            } else {
+                // Must match NSNumber.fromDatabaseValue(_:)
+                return .init(string: string, locale: _posixLocale)
+            }
         default:
             return nil
         }
